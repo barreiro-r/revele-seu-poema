@@ -147,6 +147,45 @@
             border-bottom-color: var(--black);
         }
 
+        /* Custom Checkbox Style */
+        .custom-checkbox {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--input-bg);
+            border: 1px solid transparent;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .custom-checkbox:checked {
+            background: var(--black);
+        }
+        .custom-checkbox:checked::after {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 4px;
+            height: 8px;
+            border: solid var(--sidebar-bg);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* --- WHIMSICAL RED LIGHT MODE (EASTER EGG) --- */
+        body.red-light-mode {
+            --black: #ff3333;
+            --cream: #1a0505;
+            --sidebar-bg: #2a0808;
+            --input-bg: rgba(255, 51, 51, 0.1);
+        }
+
+        body.theme-transition,
+        body.theme-transition * {
+            transition: background-color 1.2s ease, color 1.2s ease, border-color 1.2s ease, box-shadow 1.2s ease, stroke 1.2s ease, fill 1.2s ease !important;
+        }
+
         /* --- SEGMENT CARDS --- */
         .segment-card {
             border: 2px solid var(--black);
@@ -203,10 +242,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 40px;
+            display: block;
         }
 
         .a4-page {
@@ -218,8 +254,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            overflow: hidden; /* Hide marks that bleed out of the page bounds */
+            margin: 0 auto 40px auto; 
+            overflow: hidden; 
         }
 
         .segments-block {
@@ -243,7 +279,6 @@
             overflow-wrap: break-word;
         }
 
-        /* Cutting line removed per user request */
         .segment-border-right {
             border-right: 0px none;
         }
@@ -264,6 +299,24 @@
             line-height: 1.3;
         }
 
+        .microprint-top {
+            position: absolute;
+            top: 10mm;
+            right: 10mm;
+            text-align: right;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 8pt;
+            line-height: 1.3;
+        }
+
+        .show-grid .print-segment {
+            border: 0.30pt dashed lightgray;
+            border-right: none;
+        }
+        .show-grid .print-segment:last-child {
+            border-right: 0.30pt dashed lightgray;
+        }
+
         /* --- UTILS --- */
         .hidden { display: none !important; }
         .flex { display: flex; }
@@ -273,47 +326,70 @@
         .text-right { text-align: right; }
         .text-left { text-align: left; }
 
-        @media print {
-            @page { 
-                size: A4 landscape; 
-                margin: 0; 
+        @media screen and (max-width: 768px) {
+            body { 
+                flex-direction: column; 
             }
-            html, body { 
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                display: block; /* Remove the flex behavior during print */
-                background: #FFFFFF; 
+            #sidebar { 
+                width: 100% !important; 
+                height: 55vh; 
+                border-right: none; 
+                border-bottom: 2px solid var(--black); 
             }
-            #sidebar, #print-hint { display: none !important; }
+            #sidebar.collapsed { 
+                height: auto; 
+                flex-direction: row; 
+                padding: 10px; 
+            }
             #preview-container { 
-                padding: 0; 
-                margin: 0;
-                display: block; 
-                overflow: visible; 
-                background: transparent; 
-            }
-            .a4-page { 
-                box-shadow: none; 
-                margin: 0 auto; /* Centers the page to prevent left pushing */
-                padding: 0;
-                position: relative; /* Removed absolute positioning */
-                width: 297mm;
-                height: 210mm;
-                page-break-after: always; 
-                background-color: #FFFFFF !important; 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact;
-                overflow: hidden; /* Keep hiding bleed out on print */
-            }
-            .segments-block {
-                background-color: #FFFFFF !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                height: 45vh;
+                padding: 20px; 
             }
         }
 
-        /* Print Hint */
+        @media print {
+            @page { 
+                size: 297mm 210mm landscape; 
+                margin: 0; 
+            }
+            html, body { 
+                width: 297mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: block !important; 
+                background: #FFFFFF !important; 
+            }
+            #sidebar, #print-hint, .modal-overlay { display: none !important; }
+            #preview-container { 
+                padding: 0 !important; 
+                margin: 0 !important;
+                width: 297mm !important;
+                display: block !important; 
+                overflow: visible !important; 
+                background: transparent !important; 
+            }
+            .a4-page { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                padding: 0 !important;
+                position: relative !important;
+                width: 297mm !important;
+                height: 210mm !important;
+                page-break-after: always !important; 
+                page-break-inside: avoid !important;
+                background-color: #FFFFFF !important; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important;
+                overflow: hidden !important; 
+                transform: none !important;
+            }
+            .segments-block {
+                background-color: #FFFFFF !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+
         #print-hint {
             position: fixed;
             top: 24px;
@@ -328,13 +404,33 @@
             align-items: center;
             gap: 16px;
         }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-box {
+            background: var(--sidebar-bg);
+            border: 2px solid var(--black);
+            padding: 24px;
+            max-width: 320px;
+            box-shadow: 4px 4px 0 var(--black);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
     <canvas id="measureCanvas" style="display:none;"></canvas>
 
-    <!-- HINT BOX -->
     <div id="print-hint">
         <i data-lucide="info" style="width:24px; height:24px;"></i>
         <div>
@@ -343,17 +439,28 @@
         </div>
     </div>
 
-    <!-- SIDEBAR -->
+    <div id="confirm-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div style="display:flex; justify-content:center; margin-bottom:16px;">
+                <i data-lucide="alert-triangle" style="width:32px; height:32px;"></i>
+            </div>
+            <p style="font-weight:bold; font-size:14px; text-transform:lowercase; margin-bottom:24px; letter-spacing:-0.01em;">tem certeza que deseja apagar todos os segmentos?</p>
+            <div class="flex gap-2">
+                <button class="brutalist-button btn-secondary" style="flex:1;" onclick="closeConfirmModal()">cancelar</button>
+                <button class="brutalist-button btn-primary" style="flex:1;" onclick="executeClearAll()">apagar tudo</button>
+            </div>
+        </div>
+    </div>
+
     <aside id="sidebar">
-        <!-- Expanded Sidebar Content -->
         <div id="sidebar-expanded-content" style="height: 100%; display: flex; flex-direction: column;">
             <div class="sidebar-header">
                 <div style="display:flex; justify-content: space-between; align-items: start;">
                     <div>
                         <div id="logo-main"></div>
                         <h1 class="brutalist-title">revele seu<br>poema</h1>
-                        <p class="brutalist-label">matrizes de impressão</p>
-                        <p class="brutalist-label" style="margin-top: 12px;">by rodrigo barreiro</p>
+                        <p class="brutalist-label" id="red-light-text" onclick="triggerRedLight()" style="cursor: pointer; width: fit-content; user-select: none;" title="clique para acender a câmara escura">(há uma luz vermelha)</p>
+                        <p class="brutalist-label" style="margin-top: 12px;">by <a href="https://instagram.com/rodrigo404" target="_blank" style="color: inherit; text-decoration: underline; text-underline-offset: 2px;">rodrigo404</a></p>
                     </div>
                     <button class="btn-secondary brutalist-button" onclick="toggleSidebar()" style="padding: 6px;">
                         <i data-lucide="arrow-left-to-line"></i>
@@ -366,21 +473,28 @@
                     <button class="brutalist-button btn-secondary" onclick="loadExample()">
                         <i data-lucide="wand2"></i> exemplo
                     </button>
+                    <button class="brutalist-button btn-secondary" onclick="clearAll()" title="limpar tudo" style="padding: 12px 16px;">
+                        <i data-lucide="eraser"></i>
+                    </button>
+                </div>
+                
+                <div style="margin-top: 16px;">
+                    <label style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; cursor: pointer; width: fit-content;">
+                        <input type="checkbox" class="custom-checkbox" onchange="toggleCuttingGrid(this.checked)">
+                        <span class="brutalist-label" style="margin: 0; text-transform: lowercase;">guias de corte (tracejado)</span>
+                    </label>
                 </div>
             </div>
 
-            <div class="sidebar-content" id="segments-editor">
-                <!-- Segments rendered here -->
-            </div>
+            <div class="sidebar-content" id="segments-editor"></div>
 
-            <div style="padding: 24px; background: var(--sidebar-bg); border-top: 1px solid var(--black);">
+            <div style="padding: 24px; background: var(--sidebar-bg); border-top: 1px solid var(--black); display: flex; flex-direction: column; gap: 16px;">
                 <button class="brutalist-button btn-secondary" style="width: 100%; border-style: dashed;" onclick="addSegment()">
                     <i data-lucide="plus"></i> novo segmento
                 </button>
             </div>
         </div>
 
-        <!-- Collapsed Sidebar Content -->
         <div id="sidebar-collapsed-content" class="hidden" style="height: 100%; display: flex; flex-direction: column; align-items: center; padding: 16px 0;">
             <button class="btn-secondary brutalist-button" onclick="toggleSidebar()" style="padding: 6px;">
                 <i data-lucide="arrow-right-to-line"></i>
@@ -390,13 +504,9 @@
         </div>
     </aside>
 
-    <!-- PREVIEW -->
-    <main id="preview-container">
-        <!-- A4 Pages rendered here -->
-    </main>
+    <main id="preview-container"></main>
 
     <script>
-        // --- LOGO SVG ---
         const logoSvg = `
             <svg viewBox="0 0 120 40" style="width: 100%; height: auto;" fill="none" stroke="currentColor" stroke-width="3">
                 <line x1="0" y1="20" x2="120" y2="20" />
@@ -408,7 +518,6 @@
         document.getElementById('logo-main').innerHTML = `<div style="width: 96px;">${logoSvg}</div>`;
         document.getElementById('logo-collapsed').innerHTML = `<div style="width: 48px; transform: rotate(90deg);">${logoSvg}</div>`;
 
-        // --- STATE ---
         let segments = [{
             id: Date.now(),
             author: '',
@@ -416,6 +525,7 @@
             part: '',
             bookTitle: '',
             city: '',
+            editora: '',
             year: '',
             page: '',
             poemText: '',
@@ -424,8 +534,13 @@
         }];
 
         let isSidebarCollapsed = false;
+        let showCuttingGrid = false;
 
-        // --- UTILS ---
+        function toggleCuttingGrid(checked) {
+            showCuttingGrid = checked;
+            render();
+        }
+
         function toggleSidebar() {
             isSidebarCollapsed = !isSidebarCollapsed;
             const sidebar = document.getElementById('sidebar');
@@ -451,6 +566,7 @@
                 part: '',
                 bookTitle: '',
                 city: '',
+                editora: '',
                 year: '',
                 page: '',
                 poemText: '',
@@ -515,31 +631,25 @@
             return `segmento // ${String(idx + 1).padStart(2, '0')}`;
         }
 
-        // --- VERSE SPLITTING ENGINE ---
         const canvas = document.getElementById('measureCanvas');
         const ctx = canvas.getContext('2d');
         ctx.font = '10pt "Times New Roman"';
 
         function splitPoemVerse(verse, maxWidthPx = 290) {
             if (!verse.trim()) return [{ text: verse, isContinuation: false }];
-            
             const plainText = verse.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/_(.*?)_/g, '$1');
             if (ctx.measureText(plainText).width <= maxWidthPx) {
                 return [{ text: verse, isContinuation: false }];
             }
-
             const words = verse.split(' ');
             const lines = [];
             let currentLine = '';
-
             for (let i = 0; i < words.length; i++) {
                 const word = words[i];
                 const testLine = currentLine === '' ? word : currentLine + ' ' + word;
                 const isFirstLine = lines.length === 0;
                 const prefix = !isFirstLine && currentLine === '' ? '[ ' : '';
-                
                 const measureText = (prefix + testLine).replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/_(.*?)_/g, '$1');
-                
                 if (ctx.measureText(measureText).width <= maxWidthPx) {
                     currentLine = testLine;
                 } else {
@@ -556,9 +666,7 @@
             return lines;
         }
 
-        // --- RENDER ENGINE ---
         function render() {
-            // Render Editor
             const editor = document.getElementById('segments-editor');
             editor.innerHTML = segments.map((seg, idx) => `
                 <div class="segment-card ${seg.isCollapsed ? 'collapsed' : ''}">
@@ -567,7 +675,7 @@
                             <i data-lucide="${seg.isCollapsed ? 'chevron-down' : 'chevron-up'}" style="width:14px;"></i>
                             <span class="brutalist-label" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${getSegmentDisplayTitle(seg, idx)}</span>
                         </div>
-                        <i data-lucide="trash-2" style="width:14px;" onclick="event.stopPropagation(); removeSegment(${seg.id})"></i>
+                        <i data-lucide="x" style="width:14px;" onclick="event.stopPropagation(); removeSegment(${seg.id})"></i>
                     </div>
                     <div class="segment-body">
                         <div class="input-group">
@@ -594,6 +702,10 @@
                                 <input type="text" class="vintage-input" value="${seg.city}" oninput="updateSegment(${seg.id}, 'city', this.value)">
                             </div>
                             <div class="input-group" style="flex:1;">
+                                <label class="field-label">editora</label>
+                                <input type="text" class="vintage-input" value="${seg.editora || ''}" oninput="updateSegment(${seg.id}, 'editora', this.value)">
+                            </div>
+                            <div class="input-group" style="flex:1;">
                                 <label class="field-label">ano</label>
                                 <input type="text" class="vintage-input" value="${seg.year}" oninput="updateSegment(${seg.id}, 'year', this.value)">
                             </div>
@@ -616,35 +728,27 @@
                 </div>
             `).join('');
 
-            // Render Preview Pages
             const preview = document.getElementById('preview-container');
             const pageCount = Math.ceil(segments.length / 3);
             const dateStr = new Date().toLocaleDateString('pt-BR');
-            
             preview.innerHTML = '';
             for (let p = 0; p < pageCount; p++) {
                 const pageSegments = segments.slice(p * 3, p * 3 + 3);
-                
                 const pageEl = document.createElement('div');
                 pageEl.className = 'a4-page';
-                
                 const block = document.createElement('div');
-                block.className = 'segments-block';
-                
+                block.className = 'segments-block' + (showCuttingGrid ? ' show-grid' : '');
                 for (let i = 0; i < 3; i++) {
                     const seg = pageSegments[i];
                     const segEl = document.createElement('div');
                     segEl.className = 'print-segment';
-                    
                     if (seg || i < 3) {
                         if (i === 0) {
                             segEl.innerHTML += getCutMark(true, 'left');
                             segEl.innerHTML += getCutMark(false, 'left');
                         }
-                        
                         segEl.innerHTML += getCutMark(true, 'right');
                         segEl.innerHTML += getCutMark(false, 'right');
-
                         if (seg) {
                             let html = seg.poemTitle ? `<div style="margin-bottom:1em;">${seg.poemTitle}</div>` : '';
                             html += `<div class="poem-text">`;
@@ -661,33 +765,31 @@
                                     }).join('');
                                 }).join('');
                             }
-                            html += `</div>`;
-
-                            html += `<div style="margin-top:1em; padding-top:0.5em;">`;
+                            html += `</div><div style="margin-top:1em; padding-top:0.5em;">`;
                             if (seg.part) html += `<div style="margin-bottom:1.25em;">${seg.part}</div>`;
                             const citeParts = [];
                             const author = formatAuthor(seg.author);
                             if (author) citeParts.push(`${author}. `);
                             if (seg.poemTitle) citeParts.push(`${seg.poemTitle}. `);
                             if (seg.bookTitle) citeParts.push(`In: <em>${seg.bookTitle}</em>. `);
-                            if (seg.city && seg.year) citeParts.push(`${seg.city}: ${seg.year}. `);
-                            else if (seg.city) citeParts.push(`${seg.city}. `);
-                            else if (seg.year) citeParts.push(`${seg.year}. `);
+                            let pubString = "";
+                            if (seg.city) pubString += seg.city;
+                            if (seg.editora) pubString += (pubString ? ': ' : '') + seg.editora;
+                            if (seg.year) pubString += (pubString ? ', ' : '') + seg.year;
+                            if (pubString) citeParts.push(`${pubString}. `);
                             if (seg.page) citeParts.push(`p. ${seg.page}.`);
-                            html += `<div>${citeParts.join('')}</div>`;
-                            html += `</div>`;
-                            
+                            html += `<div>${citeParts.join('')}</div></div>`;
                             segEl.innerHTML += html;
                         }
                     }
-                    
                     block.appendChild(segEl);
                 }
-                
                 pageEl.appendChild(block);
-                
-                // Micro Design
                 pageEl.innerHTML += `
+                    <div class="microprint-top" style="display: flex; align-items: flex-end; gap: 8px;">
+                        <div style="padding-bottom: 2px;">barreiro-r.github.io/revele-seu-poema/</div>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://barreiro-r.github.io/revele-seu-poema/&margin=0" style="width: 14mm; height: 14mm; mix-blend-mode: multiply;" alt="QR Code" />
+                    </div>
                     <div class="microprint">
                         <div>revele seu poema — ${dateStr} — página ${p + 1} de ${pageCount}</div>
                         <div>layout 99x150mm — times new roman, 10pt</div>
@@ -698,10 +800,8 @@
                         </div>
                     </div>
                 `;
-                
                 preview.appendChild(pageEl);
             }
-
             lucide.createIcons();
         }
 
@@ -734,19 +834,19 @@
             segments = [
                 {
                     id: 1, author: 'Carlos Drummond de Andrade', poemTitle: 'No meio do caminho',
-                    part: '', bookTitle: 'Alguma Poesia', city: 'Belo Horizonte', year: '1930', page: '12',
+                    part: '', bookTitle: 'Alguma Poesia', city: 'Belo Horizonte', editora: 'Pindorama', year: '1930', page: '12',
                     type: 'poema', isCollapsed: true,
                     poemText: 'No meio do caminho tinha uma pedra\nTinha uma pedra no meio do caminho\nTinha uma pedra\nNo meio do caminho tinha uma pedra.\n\nNunca me esquecerei desse acontecimento\nNa vida de minhas retinas tão fatigadas.\nNunca me esquecerei que no meio do caminho\nTinha uma pedra\nTinha uma pedra no meio do caminho\nNo meio do caminho tinha uma pedra.'
                 },
                 {
                     id: 2, author: 'João Guimarães Rosa', poemTitle: 'O espelho',
-                    part: '1/2', bookTitle: 'Primeiras Estórias', city: 'Rio de Janeiro', year: '1962', page: '75',
+                    part: '1/2', bookTitle: 'Primeiras Estórias', city: 'Rio de Janeiro', editora: 'José Olympio', year: '1962', page: '75',
                     type: 'prosa', isCollapsed: true,
                     poemText: 'Eu, o senhor me vê, sou um homem de muitos começos. Comecei a vida várias vezes, em lugares diferentes, com pessoas differentes. O espelho, porém, sempre me devolveu a mesma face perplexa. \n\nNão há como fugir do que fomos, do que somos. A água do rio corre, mas o leito permanece o mesmo, guardando as pedras e os segredos da nascente.'
                 },
                 {
                     id: 3, author: 'Fernando Pessoa', poemTitle: 'Autopsicografia',
-                    part: '', bookTitle: 'Cancioneiro', city: 'Lisboa', year: '1932', page: '10',
+                    part: '', bookTitle: 'Cancioneiro', city: 'Lisboa', editora: 'Ática', year: '1932', page: '10',
                     type: 'poema', isCollapsed: true,
                     poemText: 'O poeta é um fingidor.\nFinge tão completamente\nQue chega a fingir que é dor\nA dor que deveras sente.\n\nE os que leem o que escreve,\nNa dor lida sentem bem,\nNão as duas que ele teve,\nMas só a que eles não têm.'
                 }
@@ -754,7 +854,56 @@
             render();
         }
 
-        // Init
+        function clearAll() {
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        function executeClearAll() {
+            segments = [{
+                id: Date.now(),
+                author: '',
+                poemTitle: '',
+                part: '',
+                bookTitle: '',
+                city: '',
+                editora: '',
+                year: '',
+                page: '',
+                poemText: '',
+                type: 'poema',
+                isCollapsed: false
+            }];
+            closeConfirmModal();
+            render();
+        }
+
+        function triggerRedLight() {
+            const body = document.body;
+            if (body.classList.contains('red-light-mode')) return; // Evita cliques seguidos
+            
+            const textEl = document.getElementById('red-light-text');
+            
+            // Liga a transição suave e aplica o modo câmara escura
+            body.classList.add('theme-transition');
+            body.classList.add('red-light-mode');
+            textEl.innerText = "(a luz está acesa)";
+            
+            // Desliga após 4 segundos
+            setTimeout(() => {
+                body.classList.remove('red-light-mode');
+                textEl.innerText = "(há uma luz vermelha)";
+                
+                // Remove a classe de transição depois do efeito desaparecer para não afetar o uso normal
+                setTimeout(() => {
+                    body.classList.remove('theme-transition');
+                }, 1200);
+            }, 4000);
+        }
+
         render();
     </script>
 </body>
