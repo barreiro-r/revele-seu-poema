@@ -482,11 +482,13 @@
     <div id="mobile-warning" class="modal-overlay">
         <div class="modal-box" style="max-width: 90%; padding: 32px;">
             <div style="display:flex; justify-content:center; margin-bottom:24px;">
-                <i data-lucide="monitor" style="width:48px; height:48px;"></i>
+                <svg viewBox="0 0 48 48" style="width: 48px; height: 48px;" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="square">
+                    <path d="M 12 32 A 12 12 0 0 1 36 32" />
+                </svg>
             </div>
             <h2 class="brutalist-title" style="font-size: 24px; margin-bottom: 12px;">a câmara escura precisa de espaço</h2>
             <p style="font-size:12px; text-transform:lowercase; margin-bottom:32px; line-height: 1.4;">
-                esta ferramenta foi projetada para telas maiores. para diagramar as suas matrizes corretamente e garantir proporções exatas de impressão, recomendamos fortemente o uso de um computador.
+                esta ferramenta foi projetada para telas maiores. para garantir a correta diagramação e proporções exatas de impressão, recomendamos fortemente o uso de um computador.
             </p>
             <button class="brutalist-button btn-secondary" style="width: 100%;" onclick="dismissMobileWarning()">
                 continuar no celular mesmo assim
@@ -947,7 +949,7 @@
         }
 
         function dismissMobileWarning() {
-            document.getElementById('mobile-warning').style.display = 'none';
+            document.getElementById('mobile-warning').style.setProperty('display', 'none', 'important');
         }
 
         render();
