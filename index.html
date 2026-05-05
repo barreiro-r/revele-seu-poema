@@ -627,6 +627,20 @@
             }
         }
 
+        function copyPreviousCitation(id) {
+            const idx = segments.findIndex(s => s.id === id);
+            if (idx > 0) {
+                const prev = segments[idx - 1];
+                const current = segments[idx];
+                current.author = prev.author;
+                current.bookTitle = prev.bookTitle;
+                current.city = prev.city;
+                current.editora = prev.editora;
+                current.year = prev.year;
+                render();
+            }
+        }
+
         // AGORA NÃO PERDE O FOCO!
         function updateSegment(id, field, value) {
             const seg = segments.find(s => s.id === id);
@@ -740,6 +754,18 @@
                         <i data-lucide="x" style="width:14px;" onclick="event.stopPropagation(); removeSegment(${seg.id})"></i>
                     </div>
                     <div class="segment-body">
+                        ${idx > 0 ? `
+                        <div style="display:flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--black); padding-bottom: 8px; margin-bottom: 16px;">
+                            <span class="field-label" style="margin:0;">dados da citação</span>
+                            <button class="toggle-btn" style="border: 1px solid var(--black); display:flex; align-items:center; gap:4px; padding:4px 8px; font-size: 10px;" onclick="copyPreviousCitation(${seg.id})">
+                                <i data-lucide="copy" style="width:10px; height:10px;"></i> repetir obra anterior
+                            </button>
+                        </div>
+                        ` : `
+                        <div style="border-bottom: 1px solid var(--black); padding-bottom: 8px; margin-bottom: 16px;">
+                            <span class="field-label" style="margin:0;">dados da citação</span>
+                        </div>
+                        `}
                         <div class="input-group">
                             <label class="field-label">nome do autor</label>
                             <input type="text" class="vintage-input" value="${seg.author}" oninput="updateSegment(${seg.id}, 'author', this.value)">
