@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>revele seu poema</title>
+    <!-- Favicon inline base64/SVG do logo -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 40' fill='none' stroke='black' stroke-width='4' stroke-linecap='square'%3E%3Cline x1='0' y1='20' x2='120' y2='20'/%3E%3Ccircle cx='44' cy='20' r='16'/%3E%3Ccircle cx='60' cy='20' r='16'/%3E%3Ccircle cx='76' cy='20' r='16'/%3E%3C/svg%3E">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --cream: #FCF9F2;
+            --sidebar-bg: #EFEBE0;
+            --black: #000000;
+            --input-bg: rgba(0, 0, 0, 0.06);
+            --input-focus: rgba(0, 0, 0, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--cream);
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: var(--black);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+        }
+
+        /* --- EDITOR UI (BRUTALIST) --- */
+        #sidebar {
+            width: 480px;
+            background-color: var(--sidebar-bg);
+            border-right: 2px solid var(--black);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            z-index: 20;
+            transition: width 0.3s ease;
+            box-shadow: 4px 0 0 rgba(0,0,0,0.05);
+            flex-shrink: 0;
+        }
+
+        #sidebar.collapsed {
+            width: 64px;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 2px solid var(--black);
+            position: sticky;
+            top: 0;
+            background: var(--sidebar-bg);
+            z-index: 10;
+        }
+
+        .sidebar-content {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            padding-bottom: 100px;
+        }
+
+        .brutalist-title {
+            font-size: 32px;
+            font-weight: bold;
+            text-transform: lowercase;
+            letter-spacing: -0.02em;
+            line-height: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .brutalist-label {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: lowercase;
+            letter-spacing: -0.01em;
+        }
+
+        .brutalist-button {
+            border: 2px solid var(--black);
+            padding: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: lowercase;
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: var(--black);
+        }
+
+        .btn-primary {
+            background: var(--black);
+            color: var(--sidebar-bg);
+        }
+
+        .btn-primary:hover {
+            background: transparent;
+            color: var(--black);
+        }
+
+        .btn-secondary {
+            background: transparent;
+        }
+
+        .btn-secondary:hover {
+            background: var(--black);
+            color: var(--sidebar-bg);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: lowercase;
+            letter-spacing: -0.01em;
+            margin-bottom: 4px;
+        }
+
+        .vintage-input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 2px solid transparent;
+            padding: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .vintage-input:focus {
+            background: var(--input-focus);
+            border-bottom-color: var(--black);
+        }
+
+        /* --- SEGMENT CARDS --- */
+        .segment-card {
+            border: 2px solid var(--black);
+            margin-bottom: 24px;
+        }
+
+        .segment-header {
+            background: var(--black);
+            color: var(--sidebar-bg);
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .segment-header:hover {
+            background: #222;
+        }
+
+        .segment-body {
+            padding: 16px;
+            background: var(--sidebar-bg);
+            display: block;
+        }
+
+        .segment-card.collapsed .segment-body {
+            display: none;
+        }
+
+        .toggle-group {
+            display: flex;
+            border: 2px solid var(--black);
+            width: fit-content;
+        }
+
+        .toggle-btn {
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: lowercase;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .toggle-btn.active {
+            background: var(--black);
+            color: var(--sidebar-bg);
+        }
+
+        /* --- PREVIEW PANEL --- */
+        #preview-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .a4-page {
+            width: 297mm;
+            height: 210mm;
+            background-color: var(--cream);
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden; /* Hide marks that bleed out of the page bounds */
+        }
+
+        .segments-block {
+            width: 297mm;
+            height: 150mm;
+            display: flex;
+        }
+
+        .print-segment {
+            width: 99mm;
+            height: 150mm;
+            padding: 10mm;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 10pt;
+            line-height: 1.25;
+            text-align: left;
+            overflow-wrap: break-word;
+        }
+
+        /* Cutting line removed per user request */
+        .segment-border-right {
+            border-right: 0px none;
+        }
+
+        .poem-text {
+            white-space: pre-wrap;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .microprint {
+            position: absolute;
+            bottom: 10mm;
+            right: 10mm;
+            text-align: right;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 8pt;
+            line-height: 1.3;
+        }
+
+        /* --- UTILS --- */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .gap-2 { gap: 8px; }
+        .italic { font-style: italic; }
+        .bold { font-weight: bold; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
+
+        @media print {
+            @page { 
+                size: A4 landscape; 
+                margin: 0; 
+            }
+            html, body { 
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                display: block; /* Remove the flex behavior during print */
+                background: #FFFFFF; 
+            }
+            #sidebar, #print-hint { display: none !important; }
+            #preview-container { 
+                padding: 0; 
+                margin: 0;
+                display: block; 
+                overflow: visible; 
+                background: transparent; 
+            }
+            .a4-page { 
+                box-shadow: none; 
+                margin: 0 auto; /* Centers the page to prevent left pushing */
+                padding: 0;
+                position: relative; /* Removed absolute positioning */
+                width: 297mm;
+                height: 210mm;
+                page-break-after: always; 
+                background-color: #FFFFFF !important; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+                overflow: hidden; /* Keep hiding bleed out on print */
+            }
+            .segments-block {
+                background-color: #FFFFFF !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        /* Print Hint */
+        #print-hint {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--sidebar-bg);
+            border: 2px solid var(--black);
+            padding: 12px 20px;
+            box-shadow: 4px 4px 0 var(--black);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            gap: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="measureCanvas" style="display:none;"></canvas>
+
+    <!-- HINT BOX -->
+    <div id="print-hint">
+        <i data-lucide="info" style="width:24px; height:24px;"></i>
+        <div>
+            <p style="font-weight:bold; font-size:12px; text-transform:lowercase; margin-bottom:2px;">A janela não abriu?</p>
+            <p style="font-size:10px; text-transform:lowercase;">Pressione <strong>Ctrl + P</strong> (Windows) ou <strong>Cmd + P</strong> (Mac).</p>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar">
+        <!-- Expanded Sidebar Content -->
+        <div id="sidebar-expanded-content" style="height: 100%; display: flex; flex-direction: column;">
+            <div class="sidebar-header">
+                <div style="display:flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <div id="logo-main"></div>
+                        <h1 class="brutalist-title">revele seu<br>poema</h1>
+                        <p class="brutalist-label">matrizes de impressão</p>
+                        <p class="brutalist-label" style="margin-top: 12px;">by rodrigo barreiro</p>
+                    </div>
+                    <button class="btn-secondary brutalist-button" onclick="toggleSidebar()" style="padding: 6px;">
+                        <i data-lucide="arrow-left-to-line"></i>
+                    </button>
+                </div>
+                <div class="flex gap-2" style="margin-top: 20px;">
+                    <button class="brutalist-button btn-primary flex-1" onclick="handleSavePDF()">
+                        <i data-lucide="download"></i> salvar pdf
+                    </button>
+                    <button class="brutalist-button btn-secondary" onclick="loadExample()">
+                        <i data-lucide="wand2"></i> exemplo
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-content" id="segments-editor">
+                <!-- Segments rendered here -->
+            </div>
+
+            <div style="padding: 24px; background: var(--sidebar-bg); border-top: 1px solid var(--black);">
+                <button class="brutalist-button btn-secondary" style="width: 100%; border-style: dashed;" onclick="addSegment()">
+                    <i data-lucide="plus"></i> novo segmento
+                </button>
+            </div>
+        </div>
+
+        <!-- Collapsed Sidebar Content -->
+        <div id="sidebar-collapsed-content" class="hidden" style="height: 100%; display: flex; flex-direction: column; align-items: center; padding: 16px 0;">
+            <button class="btn-secondary brutalist-button" onclick="toggleSidebar()" style="padding: 6px;">
+                <i data-lucide="arrow-right-to-line"></i>
+            </button>
+            <div id="logo-collapsed" style="margin: 32px 0 16px 0;"></div>
+            <span class="brutalist-label" style="writing-mode: vertical-rl; transform: rotate(180deg); margin-top: 16px; font-size: 12px;">revele seu poema</span>
+        </div>
+    </aside>
+
+    <!-- PREVIEW -->
+    <main id="preview-container">
+        <!-- A4 Pages rendered here -->
+    </main>
+
+    <script>
+        // --- LOGO SVG ---
+        const logoSvg = `
+            <svg viewBox="0 0 120 40" style="width: 100%; height: auto;" fill="none" stroke="currentColor" stroke-width="3">
+                <line x1="0" y1="20" x2="120" y2="20" />
+                <circle cx="44" cy="20" r="16" />
+                <circle cx="60" cy="20" r="16" />
+                <circle cx="76" cy="20" r="16" />
+            </svg>
+        `;
+        document.getElementById('logo-main').innerHTML = `<div style="width: 96px;">${logoSvg}</div>`;
+        document.getElementById('logo-collapsed').innerHTML = `<div style="width: 48px; transform: rotate(90deg);">${logoSvg}</div>`;
+
+        // --- STATE ---
+        let segments = [{
+            id: Date.now(),
+            author: '',
+            poemTitle: '',
+            part: '',
+            bookTitle: '',
+            city: '',
+            year: '',
+            page: '',
+            poemText: '',
+            type: 'poema',
+            isCollapsed: false
+        }];
+
+        let isSidebarCollapsed = false;
+
+        // --- UTILS ---
+        function toggleSidebar() {
+            isSidebarCollapsed = !isSidebarCollapsed;
+            const sidebar = document.getElementById('sidebar');
+            const expanded = document.getElementById('sidebar-expanded-content');
+            const collapsed = document.getElementById('sidebar-collapsed-content');
+            
+            if (isSidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                expanded.classList.add('hidden');
+                collapsed.classList.remove('hidden');
+            } else {
+                sidebar.classList.remove('collapsed');
+                expanded.classList.remove('hidden');
+                collapsed.classList.add('hidden');
+            }
+        }
+
+        function addSegment() {
+            segments.push({
+                id: Date.now(),
+                author: '',
+                poemTitle: '',
+                part: '',
+                bookTitle: '',
+                city: '',
+                year: '',
+                page: '',
+                poemText: '',
+                type: 'poema',
+                isCollapsed: false
+            });
+            render();
+        }
+
+        function removeSegment(id) {
+            if (segments.length > 1) {
+                segments = segments.filter(s => s.id !== id);
+                render();
+            }
+        }
+
+        function updateSegment(id, field, value) {
+            const seg = segments.find(s => s.id === id);
+            if (seg) seg[field] = value;
+            render();
+        }
+
+        function toggleSegmentCollapse(id) {
+            const seg = segments.find(s => s.id === id);
+            if (seg) seg.isCollapsed = !seg.isCollapsed;
+            render();
+        }
+
+        function formatAuthor(name) {
+            if (!name || !name.trim()) return '';
+            const parts = name.trim().split(/\s+/);
+            if (parts.length === 1) return parts[0].toUpperCase();
+            const lastName = parts.pop().toUpperCase();
+            const firstName = parts.join(' ');
+            return `${lastName}, ${firstName}`;
+        }
+
+        function parseMd(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/_(.*?)_/g, '<em>$1</em>');
+        }
+
+        function getSegmentDisplayTitle(seg, idx) {
+            let lastName = '';
+            if (seg.author) {
+                const parts = seg.author.trim().split(/\s+/);
+                lastName = parts[parts.length - 1];
+            }
+            let desc = '';
+            if (seg.poemTitle) desc = seg.poemTitle;
+            else if (seg.poemText) {
+                desc = seg.poemText.split('\n')[0].substring(0, 30) + '...';
+            }
+            
+            if (lastName && desc) return `${lastName} // ${desc}`.toLowerCase();
+            if (lastName) return lastName.toLowerCase();
+            if (desc) return desc.toLowerCase();
+            return `segmento // ${String(idx + 1).padStart(2, '0')}`;
+        }
+
+        // --- VERSE SPLITTING ENGINE ---
+        const canvas = document.getElementById('measureCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.font = '10pt "Times New Roman"';
+
+        function splitPoemVerse(verse, maxWidthPx = 290) {
+            if (!verse.trim()) return [{ text: verse, isContinuation: false }];
+            
+            const plainText = verse.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/_(.*?)_/g, '$1');
+            if (ctx.measureText(plainText).width <= maxWidthPx) {
+                return [{ text: verse, isContinuation: false }];
+            }
+
+            const words = verse.split(' ');
+            const lines = [];
+            let currentLine = '';
+
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                const testLine = currentLine === '' ? word : currentLine + ' ' + word;
+                const isFirstLine = lines.length === 0;
+                const prefix = !isFirstLine && currentLine === '' ? '[ ' : '';
+                
+                const measureText = (prefix + testLine).replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/_(.*?)_/g, '$1');
+                
+                if (ctx.measureText(measureText).width <= maxWidthPx) {
+                    currentLine = testLine;
+                } else {
+                    if (currentLine === '') {
+                        lines.push({ text: word, isContinuation: !isFirstLine });
+                        currentLine = '';
+                    } else {
+                        lines.push({ text: currentLine, isContinuation: !isFirstLine });
+                        currentLine = word;
+                    }
+                }
+            }
+            if (currentLine) lines.push({ text: currentLine, isContinuation: lines.length > 0 });
+            return lines;
+        }
+
+        // --- RENDER ENGINE ---
+        function render() {
+            // Render Editor
+            const editor = document.getElementById('segments-editor');
+            editor.innerHTML = segments.map((seg, idx) => `
+                <div class="segment-card ${seg.isCollapsed ? 'collapsed' : ''}">
+                    <div class="segment-header" onclick="toggleSegmentCollapse(${seg.id})">
+                        <div class="flex gap-2" style="overflow: hidden; align-items: center;">
+                            <i data-lucide="${seg.isCollapsed ? 'chevron-down' : 'chevron-up'}" style="width:14px;"></i>
+                            <span class="brutalist-label" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${getSegmentDisplayTitle(seg, idx)}</span>
+                        </div>
+                        <i data-lucide="trash-2" style="width:14px;" onclick="event.stopPropagation(); removeSegment(${seg.id})"></i>
+                    </div>
+                    <div class="segment-body">
+                        <div class="input-group">
+                            <label class="field-label">nome do autor</label>
+                            <input type="text" class="vintage-input" value="${seg.author}" oninput="updateSegment(${seg.id}, 'author', this.value)">
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="input-group" style="flex:3;">
+                                <label class="field-label">título do poema</label>
+                                <input type="text" class="vintage-input" value="${seg.poemTitle}" oninput="updateSegment(${seg.id}, 'poemTitle', this.value)">
+                            </div>
+                            <div class="input-group" style="flex:1;">
+                                <label class="field-label">parte</label>
+                                <input type="text" class="vintage-input" style="text-align:center;" placeholder="ex: 1/2" value="${seg.part}" oninput="updateSegment(${seg.id}, 'part', this.value)">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label class="field-label">nome do livro</label>
+                            <input type="text" class="vintage-input" value="${seg.bookTitle}" oninput="updateSegment(${seg.id}, 'bookTitle', this.value)">
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="input-group" style="flex:1;">
+                                <label class="field-label">local</label>
+                                <input type="text" class="vintage-input" value="${seg.city}" oninput="updateSegment(${seg.id}, 'city', this.value)">
+                            </div>
+                            <div class="input-group" style="flex:1;">
+                                <label class="field-label">ano</label>
+                                <input type="text" class="vintage-input" value="${seg.year}" oninput="updateSegment(${seg.id}, 'year', this.value)">
+                            </div>
+                            <div class="input-group" style="flex:1;">
+                                <label class="field-label">página (p.)</label>
+                                <input type="text" class="vintage-input" value="${seg.page}" oninput="updateSegment(${seg.id}, 'page', this.value)">
+                            </div>
+                        </div>
+                        <div class="input-group" style="border-top: 1px solid var(--black); padding-top: 16px;">
+                            <div class="flex" style="justify-content: space-between; align-items:center; margin-bottom: 8px;">
+                                <label class="field-label" style="margin:0;">texto</label>
+                                <div class="toggle-group">
+                                    <button class="toggle-btn ${seg.type === 'poema' ? 'active' : ''}" onclick="updateSegment(${seg.id}, 'type', 'poema')">poema</button>
+                                    <button class="toggle-btn ${seg.type === 'prosa' ? 'active' : ''}" onclick="updateSegment(${seg.id}, 'type', 'prosa')">prosa</button>
+                                </div>
+                            </div>
+                            <textarea class="vintage-input" style="height: 120px; resize:vertical;" oninput="updateSegment(${seg.id}, 'poemText', this.value)">${seg.poemText}</textarea>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Render Preview Pages
+            const preview = document.getElementById('preview-container');
+            const pageCount = Math.ceil(segments.length / 3);
+            const dateStr = new Date().toLocaleDateString('pt-BR');
+            
+            preview.innerHTML = '';
+            for (let p = 0; p < pageCount; p++) {
+                const pageSegments = segments.slice(p * 3, p * 3 + 3);
+                
+                const pageEl = document.createElement('div');
+                pageEl.className = 'a4-page';
+                
+                const block = document.createElement('div');
+                block.className = 'segments-block';
+                
+                for (let i = 0; i < 3; i++) {
+                    const seg = pageSegments[i];
+                    const segEl = document.createElement('div');
+                    segEl.className = 'print-segment';
+                    
+                    if (seg || i < 3) {
+                        if (i === 0) {
+                            segEl.innerHTML += getCutMark(true, 'left');
+                            segEl.innerHTML += getCutMark(false, 'left');
+                        }
+                        
+                        segEl.innerHTML += getCutMark(true, 'right');
+                        segEl.innerHTML += getCutMark(false, 'right');
+
+                        if (seg) {
+                            let html = seg.poemTitle ? `<div style="margin-bottom:1em;">${seg.poemTitle}</div>` : '';
+                            html += `<div class="poem-text">`;
+                            if (seg.type === 'prosa') {
+                                html += parseMd(seg.poemText);
+                            } else {
+                                html += seg.poemText.split('\n').map(pText => {
+                                    const lines = splitPoemVerse(pText);
+                                    return lines.map(l => {
+                                        const isManual = l.text.trim().startsWith('[');
+                                        const isRight = l.isContinuation || isManual;
+                                        const txt = l.isContinuation ? '[ ' + l.text : l.text;
+                                        return `<div class="${isRight ? 'text-right' : 'text-left'}" style="min-height:1.25em;">${parseMd(txt || ' ')}</div>`;
+                                    }).join('');
+                                }).join('');
+                            }
+                            html += `</div>`;
+
+                            html += `<div style="margin-top:1em; padding-top:0.5em;">`;
+                            if (seg.part) html += `<div style="margin-bottom:1.25em;">${seg.part}</div>`;
+                            const citeParts = [];
+                            const author = formatAuthor(seg.author);
+                            if (author) citeParts.push(`${author}. `);
+                            if (seg.poemTitle) citeParts.push(`${seg.poemTitle}. `);
+                            if (seg.bookTitle) citeParts.push(`In: <em>${seg.bookTitle}</em>. `);
+                            if (seg.city && seg.year) citeParts.push(`${seg.city}: ${seg.year}. `);
+                            else if (seg.city) citeParts.push(`${seg.city}. `);
+                            else if (seg.year) citeParts.push(`${seg.year}. `);
+                            if (seg.page) citeParts.push(`p. ${seg.page}.`);
+                            html += `<div>${citeParts.join('')}</div>`;
+                            html += `</div>`;
+                            
+                            segEl.innerHTML += html;
+                        }
+                    }
+                    
+                    block.appendChild(segEl);
+                }
+                
+                pageEl.appendChild(block);
+                
+                // Micro Design
+                pageEl.innerHTML += `
+                    <div class="microprint">
+                        <div>revele seu poema — ${dateStr} — página ${p + 1} de ${pageCount}</div>
+                        <div>layout 99x150mm — times new roman, 10pt</div>
+                        <div>imprimir em escala 100%, sem bordas/margens, papel creme</div>
+                        <div class="flex" style="justify-content: flex-end; align-items: center; gap: 8px;">
+                            <div style="width: 32px; height: 12px; color: black;">${logoSvg}</div>
+                            <span>um resto de poema três por quatro sobre nós dois</span>
+                        </div>
+                    </div>
+                `;
+                
+                preview.appendChild(pageEl);
+            }
+
+            lucide.createIcons();
+        }
+
+        function getCutMark(isTop, side = 'right') {
+            return `
+                <div style="position:absolute; ${isTop ? 'bottom:100%' : 'top:100%'}; ${side}:0; transform:translate(${side === 'right' ? '50%' : '-50%'}, 0); line-height:0;">
+                    <svg width="24" height="12" viewBox="0 0 16 8" style="display:block; transform: ${isTop ? '' : 'rotate(180deg)'};">
+                        <path d="M 2 8 A 6 6 0 0 1 14 8" fill="none" stroke="black" stroke-width="0.5" />
+                        <path d="M 8 8 L 8 5 A 3 3 0 0 1 11 8 Z" fill="black" />
+                        <path d="M 8 8 L 5 8 A 3 3 0 0 1 8 5 Z" fill="none" stroke="black" stroke-width="0.5" />
+                        <line x1="0" y1="8" x2="16" y2="8" stroke="black" stroke-width="0.5" />
+                        <line x1="8" y1="0" x2="8" y2="8" stroke="black" stroke-width="0.5" />
+                    </svg>
+                </div>
+            `;
+        }
+
+        function handleSavePDF() {
+            try {
+                window.print();
+                const hint = document.getElementById('print-hint');
+                hint.style.display = 'flex';
+                setTimeout(() => hint.style.display = 'none', 6000);
+            } catch (e) {
+                document.getElementById('print-hint').style.display = 'flex';
+            }
+        }
+
+        function loadExample() {
+            segments = [
+                {
+                    id: 1, author: 'Carlos Drummond de Andrade', poemTitle: 'No meio do caminho',
+                    part: '', bookTitle: 'Alguma Poesia', city: 'Belo Horizonte', year: '1930', page: '12',
+                    type: 'poema', isCollapsed: true,
+                    poemText: 'No meio do caminho tinha uma pedra\nTinha uma pedra no meio do caminho\nTinha uma pedra\nNo meio do caminho tinha uma pedra.\n\nNunca me esquecerei desse acontecimento\nNa vida de minhas retinas tão fatigadas.\nNunca me esquecerei que no meio do caminho\nTinha uma pedra\nTinha uma pedra no meio do caminho\nNo meio do caminho tinha uma pedra.'
+                },
+                {
+                    id: 2, author: 'João Guimarães Rosa', poemTitle: 'O espelho',
+                    part: '1/2', bookTitle: 'Primeiras Estórias', city: 'Rio de Janeiro', year: '1962', page: '75',
+                    type: 'prosa', isCollapsed: true,
+                    poemText: 'Eu, o senhor me vê, sou um homem de muitos começos. Comecei a vida várias vezes, em lugares diferentes, com pessoas differentes. O espelho, porém, sempre me devolveu a mesma face perplexa. \n\nNão há como fugir do que fomos, do que somos. A água do rio corre, mas o leito permanece o mesmo, guardando as pedras e os segredos da nascente.'
+                },
+                {
+                    id: 3, author: 'Fernando Pessoa', poemTitle: 'Autopsicografia',
+                    part: '', bookTitle: 'Cancioneiro', city: 'Lisboa', year: '1932', page: '10',
+                    type: 'poema', isCollapsed: true,
+                    poemText: 'O poeta é um fingidor.\nFinge tão completamente\nQue chega a fingir que é dor\nA dor que deveras sente.\n\nE os que leem o que escreve,\nNa dor lida sentem bem,\nNão as duas que ele teve,\nMas só a que eles não têm.'
+                }
+            ];
+            render();
+        }
+
+        // Init
+        render();
+    </script>
+</body>
+</html>
