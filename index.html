@@ -852,7 +852,7 @@
         function getCutMark(isTop, side = 'right') {
             return `
                 <div style="position:absolute; ${isTop ? 'bottom:100%' : 'top:100%'}; ${side}:0; transform:translate(${side === 'right' ? '50%' : '-50%'}, 0); line-height:0;">
-                    <svg width="24" height="12" viewBox="0 0 16 8" style="display:block; transform: ${isTop ? '' : 'rotate(180deg)'};">
+                    <svg width="40" height="20" viewBox="0 0 16 8" style="display:block; transform: ${isTop ? '' : 'rotate(180deg)'};">
                         <path d="M 2 8 A 6 6 0 0 1 14 8" fill="none" stroke="black" stroke-width="0.5" />
                         <path d="M 8 8 L 8 5 A 3 3 0 0 1 11 8 Z" fill="black" />
                         <path d="M 8 8 L 5 8 A 3 3 0 0 1 8 5 Z" fill="none" stroke="black" stroke-width="0.5" />
