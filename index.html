@@ -582,7 +582,7 @@
 
         function toggleCuttingGrid(checked) {
             showCuttingGrid = checked;
-            render();
+            render(); 
         }
 
         function toggleSidebar() {
@@ -627,10 +627,27 @@
             }
         }
 
+        // AGORA NÃO PERDE O FOCO!
         function updateSegment(id, field, value) {
             const seg = segments.find(s => s.id === id);
             if (seg) seg[field] = value;
-            render();
+            
+            if (field === 'type') {
+                // Se o botão de poema/prosa for clicado, renderiza tudo para atualizar os botões
+                render();
+            } else {
+                // Se apenas texto for digitado, renderiza SOMENTE a folha A4 (Preview)
+                renderPreview();
+                
+                // Atualiza o título do painel suavemente
+                if (field === 'author' || field === 'poemTitle' || field === 'poemText') {
+                    const idx = segments.findIndex(s => s.id === id);
+                    const titleEl = document.getElementById(`seg-title-${id}`);
+                    if (titleEl) {
+                        titleEl.innerText = getSegmentDisplayTitle(seg, idx);
+                    }
+                }
+            }
         }
 
         function toggleSegmentCollapse(id) {
@@ -710,14 +727,15 @@
             return lines;
         }
 
-        function render() {
+        // Separado a renderização do Painel (Editor)
+        function renderEditor() {
             const editor = document.getElementById('segments-editor');
             editor.innerHTML = segments.map((seg, idx) => `
                 <div class="segment-card ${seg.isCollapsed ? 'collapsed' : ''}">
                     <div class="segment-header" onclick="toggleSegmentCollapse(${seg.id})">
                         <div class="flex gap-2" style="overflow: hidden; align-items: center;">
                             <i data-lucide="${seg.isCollapsed ? 'chevron-down' : 'chevron-up'}" style="width:14px;"></i>
-                            <span class="brutalist-label" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${getSegmentDisplayTitle(seg, idx)}</span>
+                            <span id="seg-title-${seg.id}" class="brutalist-label" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${getSegmentDisplayTitle(seg, idx)}</span>
                         </div>
                         <i data-lucide="x" style="width:14px;" onclick="event.stopPropagation(); removeSegment(${seg.id})"></i>
                     </div>
@@ -771,17 +789,22 @@
                     </div>
                 </div>
             `).join('');
+        }
 
+        // Separado a renderização apenas da folha A4 (Preview)
+        function renderPreview() {
             const preview = document.getElementById('preview-container');
             const pageCount = Math.ceil(segments.length / 3);
             const dateStr = new Date().toLocaleDateString('pt-BR');
             preview.innerHTML = '';
+            
             for (let p = 0; p < pageCount; p++) {
                 const pageSegments = segments.slice(p * 3, p * 3 + 3);
                 const pageEl = document.createElement('div');
                 pageEl.className = 'a4-page';
                 const block = document.createElement('div');
                 block.className = 'segments-block' + (showCuttingGrid ? ' show-grid' : '');
+                
                 for (let i = 0; i < 3; i++) {
                     const seg = pageSegments[i];
                     const segEl = document.createElement('div');
@@ -819,7 +842,7 @@
                             let pubString = "";
                             if (seg.city) pubString += seg.city;
                             if (seg.editora) pubString += (pubString ? ': ' : '') + seg.editora;
-                            if (seg.year) pubString += (pubString ? ', ' : '') + seg.year;
+                            if (seg.year) pubString += (pubString ? ', ' : '') + pubString;
                             if (pubString) citeParts.push(`${pubString}. `);
                             if (seg.page) citeParts.push(`p. ${seg.page}.`);
                             html += `<div>${citeParts.join('')}</div></div>`;
@@ -828,6 +851,7 @@
                     }
                     block.appendChild(segEl);
                 }
+                
                 pageEl.appendChild(block);
                 pageEl.innerHTML += `
                     <div class="microprint-top" style="display: flex; align-items: flex-end; gap: 8px;">
@@ -846,6 +870,12 @@
                 `;
                 preview.appendChild(pageEl);
             }
+        }
+
+        // Função principal que orquestra e recria tudo (usada ao adicionar/apagar blocos)
+        function render() {
+            renderEditor();
+            renderPreview();
             lucide.createIcons();
         }
 
